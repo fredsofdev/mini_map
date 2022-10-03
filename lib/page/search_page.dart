@@ -25,6 +25,8 @@ class SearchPage extends HookWidget {
     return Scaffold(
       appBar: CustomAppBar(
         textField: TextField(
+          textAlignVertical: TextAlignVertical.center,
+          style: const TextStyle(fontSize: 19),
           controller: searchController,
           cursorColor: Colors.grey,
           decoration: InputDecoration(
@@ -121,7 +123,11 @@ class SearchPage extends HookWidget {
                   child: const Text("No")),
             ],
           );
-        }).then((value) => print(value));
+        }).then((value) {
+      if (value) {
+        Navigator.of(context).pop(true);
+      }
+    });
   }
 }
 

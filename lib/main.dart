@@ -38,6 +38,7 @@ class MyHomePage extends HookWidget {
         appBar: CustomAppBar(
           textField: TextField(
             readOnly: true,
+            style: const TextStyle(fontSize: 19),
             cursorColor: Colors.grey,
             onTap: (() {
               _navigateToSearch(context);
@@ -64,13 +65,106 @@ class MyHomePage extends HookWidget {
         ),
         body: Stack(
           children: [
-            const Center(
-              child: Image(image: AssetImage('assets/images/coming_soon.jpg')),
-            ),
             BottomNavInfo(),
             const FloatingButtonLeyer(),
+            //const MainView(),
           ],
         ));
+  }
+}
+
+class MainView extends HookWidget {
+  const MainView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scanning = useState(false);
+    final searchController = useTextEditingController(text: 'XX-XX-XX-XX');
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          height: 150,
+          width: 150,
+          decoration: BoxDecoration(
+            color: Constants.primary,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.straight,
+            color: Colors.white,
+            size: 80,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SizedBox(
+            width: 180,
+            child: TextField(
+              enabled: false,
+              readOnly: true,
+              textAlign: TextAlign.center,
+              controller: searchController,
+              decoration: const InputDecoration(
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(50)),
+                  borderSide:
+                      BorderSide(color: Constants.primary800, width: 3.0),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(50)),
+                  borderSide:
+                      BorderSide(color: Constants.primary800, width: 3.0),
+                ),
+                hintText: 'XX-XX-XX-XX',
+              ),
+            ),
+          ),
+        ),
+        Center(
+          child: SizedBox(
+            width: 150,
+            height: 150,
+            child: SizedBox(
+              height: 40.0,
+              child: MaterialButton(
+                color: Constants.primary600,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(75.0), // Change your border radius here
+                  ),
+                ),
+                onPressed: () {
+                  scanning.value = !scanning.value;
+                },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      scanning.value
+                          ? Icons.wifi_tethering
+                          : Icons.wifi_tethering_off,
+                      color: scanning.value
+                          ? Constants.textHighlColor
+                          : Colors.white,
+                      size: scanning.value ? 100 : 60,
+                    ),
+                    // Text(
+                    //   scanning.value ? "Scanning" : "Scan",
+                    //   style: TextStyle(
+                    //       color: scanning.value
+                    //           ? Constants.textHighlColor
+                    //           : Colors.white,
+                    //       fontSize: 20),
+                    // ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

@@ -19,10 +19,10 @@ class CustomAppBar extends HookWidget implements PreferredSizeWidget {
             padding: const EdgeInsets.all(8.0),
             child: Container(
               width: double.infinity,
-              height: 45,
+              height: 55,
               decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(25),
                   boxShadow: const [
                     BoxShadow(
                       color: Constants.primary800,
@@ -35,8 +35,11 @@ class CustomAppBar extends HookWidget implements PreferredSizeWidget {
                       ),
                     )
                   ]),
-              child: Center(
-                child: textField,
+              child: Padding(
+                padding: const EdgeInsets.all(6.0),
+                child: Center(
+                  child: textField,
+                ),
               ),
             ),
           ),
@@ -44,5 +47,5 @@ class CustomAppBar extends HookWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(62.0);
+  Size get preferredSize => const Size.fromHeight(80.0);
 }

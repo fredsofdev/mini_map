@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:mini_map/model/destination.dart';
 import 'package:mini_map/model/movement.dart';
 import 'package:mini_map/model/pad.dart';
 

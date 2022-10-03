@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:mini_map/constants.dart';
+import 'package:mini_map/main.dart';
 import 'package:we_slide/we_slide.dart';
 
 class BottomNavInfo extends HookWidget {
   BottomNavInfo({super.key});
 
-  final double panelMin = 60;
-  final double panelMax = 600;
+  final double panelMin = 70;
+  final double panelMax = 500;
 
   final List<DirectionView> itemList = [
     const DirectionView(
@@ -48,8 +49,8 @@ class BottomNavInfo extends HookWidget {
         panelMinSize: panelMin,
         panelMaxSize: panelMax,
         hidePanelHeader: false,
-        bodyWidth: 0,
-        body: Container(),
+        //bodyWidth: 0,
+        body: const MainView(),
         panel: Padding(
           padding: EdgeInsets.fromLTRB(0, panelMin, 0, 0),
           child: Container(
@@ -186,7 +187,7 @@ class NavInfoHeader extends StatelessWidget {
             color: Constants.primary,
             borderRadius: BorderRadius.circular(8),
           ),
-          height: 60,
+          height: 71,
           child: Flex(
             direction: Axis.horizontal,
             children: [
