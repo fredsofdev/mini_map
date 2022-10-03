@@ -26,7 +26,7 @@ class SearchPage extends StatelessWidget {
 }
 
 class _SearchPage extends HookWidget {
-  const _SearchPage({super.key});
+  const _SearchPage();
   static List<String> category = ["Elevator", "Train", "Restroom", "Stairs"];
 
   @override

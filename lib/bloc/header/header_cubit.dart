@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -16,7 +15,7 @@ class HeaderCubit extends Cubit<HeaderState> {
       if (event.isEmpty) {
         emit(const NotNavigating());
       } else {
-        var move = event.first;
+        var move = event.last;
         var pad = move.padList.lastWhere((element) => element.dest.isNotEmpty,
             orElse: () => Pad.empty);
         var destinaton = pad.dest.first;

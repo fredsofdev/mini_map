@@ -43,4 +43,67 @@ class Constants {
     Destination(desc: "Exit 3 Stairs", imagePath: "Stairs"),
     Destination(desc: "Exit 4 Stairs", imagePath: "Stairs"),
   ];
+
+  static const List<Map<String, dynamic>> FAKEDATA = [
+    {
+      "current": 1,
+      "link": {
+        "east": 2,
+        "north": 0,
+        "south": 0,
+        "west": 0,
+      },
+      "destinations": ["Exit 1 Stairs"]
+    },
+    {
+      "current": 2,
+      "link": {
+        "east": 3,
+        "north": 0,
+        "south": 0,
+        "west": 1,
+      },
+      "destinations": []
+    },
+    {
+      "current": 3,
+      "link": {
+        "east": 4,
+        "north": 0,
+        "south": 0,
+        "west": 2,
+      },
+      "destinations": []
+    },
+    {
+      "current": 4,
+      "link": {
+        "east": 0,
+        "north": 0,
+        "south": 5,
+        "west": 3,
+      },
+      "destinations": ["Elevator 1"]
+    },
+    {
+      "current": 5,
+      "link": {
+        "east": 0,
+        "north": 4,
+        "south": 6,
+        "west": 0,
+      },
+      "destinations": []
+    },
+    {
+      "current": 6,
+      "link": {
+        "east": 0,
+        "north": 5,
+        "south": 0,
+        "west": 0,
+      },
+      "destinations": ["Train 1~3"]
+    }
+  ];
 }

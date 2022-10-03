@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1027170800667",
+    "project_id": "minimap-732fe",
+    "storage_bucket": "minimap-732fe.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1027170800667:android:0dd16a195ca52d0a0694be",
+        "android_client_info": {
+          "package_name": "com.orangestep.minimap.mini_map"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1027170800667-8237q2cc046o0sfs05ac4s2pn67sch7s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBPoi3Rc90Px1BOCHJ-KJg3vUkc4-cp80g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1027170800667-8237q2cc046o0sfs05ac4s2pn67sch7s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

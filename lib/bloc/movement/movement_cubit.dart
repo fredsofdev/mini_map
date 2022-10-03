@@ -17,7 +17,7 @@ class MovementCubit extends Cubit<MovementState> {
       if (event.isEmpty) {
         emit(const EmptyMovement());
       } else {
-        emit(MovementUpdate(_mapMovementToView(event)));
+        emit(MovementUpdate(_mapMovementToView(event).reversed.toList()));
       }
     });
   }

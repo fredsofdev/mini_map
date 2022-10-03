@@ -56,19 +56,23 @@ class NavManagerRepository extends NavRepository {
   @override
   int getTotalLength() {
     if (route.isEmpty) return 0;
-    if (!route.contains(currentPos)) return 0;
-    var index = route.indexOf(currentPos);
+    var curr = route.where((element) => element.current == currentPos.current);
+    if (curr.isEmpty) return 0;
+    var index = route.indexOf(curr.first);
     return route.length - index;
   }
 
   void _getTotalData() {
     allPads = _padProvider.getTotalPads();
     allDestinations = _padProvider.getTotalDestinations();
-    currentPos = allPads.last;
+    if (allPads.isNotEmpty) {
+      currentPos = allPads.last;
+    }
   }
 
   @override
   void startNav(Destination destination) {
+    if (allPads.isEmpty) _getTotalData();
     var targetPads = allPads.where((e) => e.dest.contains(destination));
     if (targetPads.isEmpty) return;
     targetPad = targetPads.first;
@@ -80,7 +84,8 @@ class NavManagerRepository extends NavRepository {
   }
 
   void _updateCurrentLocation(String code) {
-    var current = allPads.where((e) => e.current == int.parse(code));
+    if (allPads.isEmpty) _getTotalData();
+    var current = allPads.where((e) => e.current == int.parse(code)).toList();
     if (current.isEmpty) return;
     _updateMovementByCurrent(current.first);
   }
@@ -98,26 +103,28 @@ class NavManagerRepository extends NavRepository {
       return;
     }
 
-    if (!route.contains(next)) {
+    var nextPos = route.where((e) => e.current == next.current);
+    var prevPos = route.where((e) => e.current == currentPos.current);
+    if (nextPos.isEmpty) {
       _dirController.sink.add(Direction.incorrect);
       currentPos = next;
       routeGenerator();
       return;
     }
 
-    var nextInd = route.indexOf(next);
-    var currInd = route.indexOf(currentPos);
-    if (nextInd < currInd) {
-      _dirController.sink.add(Direction.incorrect);
-      currentPos = next;
-      return;
-    }
+    print("Next $next");
+    var nextInd = route.indexOf(nextPos.first);
+    var currInd = route.indexOf(prevPos.first);
+    print("Indexes $nextInd  $currInd");
+
+    print("Next ${nextPos.first}");
     bool passed = false;
     for (int index in Iterable.generate(navPath.length - 1)) {
-      if (navPath[index].padList.contains(next)) {
+      if (navPath[index].padList.contains(nextPos.first)) {
+        print("contains in index $index");
         passed = true;
         var move = navPath[index].update(state: MoveState.current);
-        var length = move.padList.length - move.padList.indexOf(next);
+        var length = move.padList.length - move.padList.indexOf(nextPos.first);
         move.acLenth.length = length;
         navPath[index] = move;
       } else {
@@ -125,8 +132,21 @@ class NavManagerRepository extends NavRepository {
             .update(state: passed ? MoveState.upcoming : MoveState.passed);
       }
     }
-    _dirController.sink.add(Direction.correct);
-    _controller.sink.add(navPath);
+    print("New Time");
+    navPath.forEach((element) {
+      print(element);
+      print("");
+    });
+
+    if (nextInd < currInd) {
+      _controller.sink.add(navPath);
+      _dirController.sink.add(Direction.incorrect);
+      currentPos = nextPos.first;
+    } else {
+      _dirController.sink.add(Direction.correct);
+      _controller.sink.add(navPath);
+    }
+
     currentPos = next;
   }
 
@@ -142,6 +162,10 @@ class NavManagerRepository extends NavRepository {
     List<Pad> neighbors = _getNeighbors();
     route = _reconstructPath(neighbors);
     navPath = _mapRouteToMovement();
+    // navPath.forEach((element) {
+    //   print(element);
+    //   print("");
+    // });
     _controller.sink.add(navPath);
     _dirController.sink.add(Direction.correct);
   }
@@ -236,7 +260,7 @@ class NavManagerRepository extends NavRepository {
       prevDir = dirKey;
     }
     moves.first = moves.first.update(state: MoveState.current);
-    return moves.reversed.toList();
+    return moves;
   }
 
   ActionState _getAction(String prevDir, String dirKey) {

@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -14,14 +15,18 @@ import 'package:mini_map/page/search_page.dart';
 import 'package:mini_map/repo/nav_repo.dart';
 import 'package:mini_map/repo/pad_provider.dart';
 import 'package:mini_map/repo/scan_repo.dart';
-
 import 'component/custom_appbar.dart';
 
-void main() {
-  GetIt.I.registerSingleton<ScanRepository>(FakeScanRepository(),
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+
+  GetIt.I.registerSingleton<ScanRepository>(FirestoreScanRepository(),
       signalsReady: true);
+  GetIt.I.registerSingleton<PadProvider>(FirestorePadProvider());
   GetIt.I.registerSingleton<NavRepository>(
-      NavManagerRepository(GetIt.I.get<ScanRepository>(), FakePadProvider()),
+      NavManagerRepository(
+          GetIt.I.get<ScanRepository>(), GetIt.I.get<PadProvider>()),
       signalsReady: true);
 
   runApp(const MyApp());

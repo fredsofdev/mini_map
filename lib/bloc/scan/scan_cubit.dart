@@ -7,10 +7,11 @@ import 'package:mini_map/repo/scan_repo.dart';
 part 'scan_state.dart';
 
 class ScanCubit extends Cubit<ScanState> {
-  ScanCubit(this._scanRepository) : super(const NotScanning()) {}
+  ScanCubit(this._scanRepository) : super(const NotScanning());
 
   void _startListening() {
     emit(const ScanningState("Scanning ..."));
+    _scanRepository.startScanning();
     _listener = _scanRepository.padStream.listen((event) {
       emit(ScanningState(event));
     });
@@ -18,6 +19,7 @@ class ScanCubit extends Cubit<ScanState> {
 
   void _stopScanning() {
     _listener.cancel();
+    _scanRepository.startScanning();
     emit(const NotScanning());
   }
 

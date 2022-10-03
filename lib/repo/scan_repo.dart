@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:mini_map/model/pad.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 abstract class ScanRepository {
   void startScanning();
@@ -31,4 +31,37 @@ class FakeScanRepository extends ScanRepository {
 
   @override
   Stream<String> get padStream => _controller.stream;
+}
+
+class FirestoreScanRepository extends ScanRepository {
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  final String currValDoc = "test_1";
+
+  void _startListening() {
+    _listener = firestore
+        .collection("Current")
+        .doc(currValDoc)
+        .snapshots()
+        .listen((event) {
+      _controller.sink.add(event.get("position"));
+    });
+  }
+
+  final _controller = StreamController<String>.broadcast();
+
+  late StreamSubscription _listener;
+
+  @override
+  Stream<String> get padStream => _controller.stream;
+
+  @override
+  void startScanning() {
+    _startListening();
+  }
+
+  @override
+  void stopScanning() {
+    _listener.cancel();
+  }
 }

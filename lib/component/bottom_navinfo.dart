@@ -105,6 +105,7 @@ class MovementPanel extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = useBloc<MovementCubit>();
+    useBlocBuilder(cubit);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(0, panelMin, 0, 0),
@@ -205,7 +206,7 @@ class NavInfoHeader extends StatelessWidget {
             direction: Axis.horizontal,
             children: [
               Padding(
-                padding: EdgeInsets.all(15.0),
+                padding: const EdgeInsets.all(15.0),
                 child: Icon(
                   iconData,
                   size: 30,

@@ -44,6 +44,8 @@ dependencies:
   flutter_hooks: ^0.18.5+1
 
   get_it: ^7.2.0
+  cloud_firestore: ^3.5.0
+  firebase_core: ^1.24.0
   
 
 dev_dependencies:
