@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:mini_map/model/pad.dart';
 
-enum Action { unknown, forward, right, left }
+enum ActionState { unknown, forward, right, left, stop }
 
 enum MoveState { upcoming, current, passed }
 
@@ -9,14 +9,13 @@ class ActionLenth {
   int length = 0;
 
   int getMeter() {
-    return length ~/ 5;
+    return length;
   }
 }
 
 class Movement extends Equatable {
-  final Movement nextMove;
   final List<Pad> padList;
-  final Action action;
+  final ActionState action;
   final String actionDescript;
   final ActionLenth acLenth;
   final MoveState state;
@@ -31,8 +30,7 @@ class Movement extends Equatable {
   }
 
   factory Movement.empty() => Movement(
-      nextMove: Movement.empty(),
-      action: Action.unknown,
+      action: ActionState.unknown,
       actionDescript: "",
       acLenth: ActionLenth(),
       state: MoveState.upcoming,
@@ -41,15 +39,25 @@ class Movement extends Equatable {
   const Movement(
       {required this.padList,
       required this.state,
-      required this.nextMove,
       required this.action,
       required this.acLenth,
       required this.actionDescript});
+
+  Movement update({
+    ActionLenth? acLenth,
+    MoveState? state,
+  }) =>
+      Movement(
+          padList: padList,
+          state: state ?? this.state,
+          action: action,
+          acLenth: acLenth ?? this.acLenth,
+          actionDescript: actionDescript);
+
   @override
   List<Object?> get props => [
         padList,
         state,
-        nextMove,
         action,
         actionDescript,
       ];

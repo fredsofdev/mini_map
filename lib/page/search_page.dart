@@ -1,26 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:get_it/get_it.dart';
+import 'package:hooked_bloc/hooked_bloc.dart';
+import 'package:mini_map/bloc/search/search_cubit.dart';
 import 'package:mini_map/component/custom_appbar.dart';
 import 'package:mini_map/constants.dart';
+import 'package:mini_map/repo/nav_repo.dart';
+import 'package:mini_map/repo/pad_provider.dart';
 
-class SearchPage extends HookWidget {
+class SearchPage extends StatelessWidget {
   const SearchPage({super.key});
 
+  @override
+  Widget build(BuildContext context) {
+    return RepositoryProvider(
+      create: (context) => context.read<NavRepository>(),
+      child: BlocProvider<SearchCubit>(
+        create: (context) =>
+            SearchCubit(FakePadProvider(), GetIt.I.get<NavRepository>()),
+        child: const _SearchPage(),
+      ),
+    );
+  }
+}
+
+class _SearchPage extends HookWidget {
+  const _SearchPage({super.key});
   static List<String> category = ["Elevator", "Train", "Restroom", "Stairs"];
 
   @override
   Widget build(BuildContext context) {
     final searchController = useTextEditingController(text: '');
-    final destinationList = useState(Constants.fakeDestiontions);
-
-    useEffect((() {
-      searchController.addListener(() {
-        destinationList.value = Constants.fakeDestiontions
+    final cubit = useBloc<SearchCubit>();
+    final destinationList = useState(cubit.state);
+    searchController.addListener(
+      () {
+        destinationList.value = cubit.state
             .where((e) => e.imagePath.contains(searchController.text))
             .toList();
-      });
-      return null;
-    }), []);
+      },
+    );
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -86,8 +106,14 @@ class SearchPage extends HookWidget {
                 itemBuilder: (BuildContext context, int index) {
                   var destinaiton = destinationList.value[index];
                   return GestureDetector(
-                    onTap: (() {
-                      _selectDestination(context, destinaiton.desc);
+                    onTap: (() async {
+                      _selectDestination(context, destinaiton.desc,
+                          result: (value) {
+                        if (value) {
+                          cubit.selectDestination(destinaiton);
+                          Navigator.of(context).pop(true);
+                        }
+                      });
                     }),
                     child: DestinationView(
                       image: destinaiton.imagePath,
@@ -103,8 +129,9 @@ class SearchPage extends HookWidget {
     );
   }
 
-  void _selectDestination(BuildContext context, String desc) {
-    showDialog(
+  void _selectDestination(BuildContext context, String desc,
+      {required Function result}) {
+    showDialog<bool>(
         context: context,
         builder: (BuildContext ctx) {
           return AlertDialog(
@@ -123,11 +150,7 @@ class SearchPage extends HookWidget {
                   child: const Text("No")),
             ],
           );
-        }).then((value) {
-      if (value) {
-        Navigator.of(context).pop(true);
-      }
-    });
+        }).then((value) => result(value));
   }
 }
 

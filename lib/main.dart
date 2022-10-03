@@ -1,13 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:get_it/get_it.dart';
+import 'package:hooked_bloc/hooked_bloc.dart';
+import 'package:mini_map/bloc/header/header_cubit.dart';
+import 'package:mini_map/bloc/mark/mark_cubit.dart';
+import 'package:mini_map/bloc/movement/movement_cubit.dart';
+import 'package:mini_map/bloc/scan/scan_cubit.dart';
 import 'package:mini_map/component/bottom_navinfo.dart';
 import 'package:mini_map/constants.dart';
 import 'package:mini_map/helper/fade_page_transition.dart';
 import 'package:mini_map/page/search_page.dart';
+import 'package:mini_map/repo/nav_repo.dart';
+import 'package:mini_map/repo/pad_provider.dart';
+import 'package:mini_map/repo/scan_repo.dart';
 
 import 'component/custom_appbar.dart';
 
 void main() {
+  GetIt.I.registerSingleton<ScanRepository>(FakeScanRepository(),
+      signalsReady: true);
+  GetIt.I.registerSingleton<NavRepository>(
+      NavManagerRepository(GetIt.I.get<ScanRepository>(), FakePadProvider()),
+      signalsReady: true);
+
   runApp(const MyApp());
 }
 
@@ -19,12 +35,25 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(primarySwatch: Constants.primarySwatch),
-      home: const MyHomePage(),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+              create: ((context) => HeaderCubit(GetIt.I.get<NavRepository>()))),
+          BlocProvider(
+              create: ((context) =>
+                  MovementCubit(GetIt.I.get<NavRepository>()))),
+          BlocProvider(
+              create: ((context) => ScanCubit(GetIt.I.get<ScanRepository>()))),
+          BlocProvider(
+              create: ((context) => MarkCubit(GetIt.I.get<NavRepository>())))
+        ],
+        child: const MyHomePage(),
+      ),
     );
   }
 }
 
-class MyHomePage extends HookWidget {
+class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
 
   void _navigateToSearch(BuildContext context) {
@@ -64,9 +93,9 @@ class MyHomePage extends HookWidget {
           ),
         ),
         body: Stack(
-          children: [
+          children: const [
             BottomNavInfo(),
-            const FloatingButtonLeyer(),
+            FloatingButtonLeyer(),
             //const MainView(),
           ],
         ));
@@ -80,22 +109,18 @@ class MainView extends HookWidget {
   Widget build(BuildContext context) {
     final scanning = useState(false);
     final searchController = useTextEditingController(text: 'XX-XX-XX-XX');
+
+    final cubit = useBloc<ScanCubit>();
+
+    useBlocListener(cubit, ((bloc, current, context) {
+      searchController.text = (current as ScanState).tagCode;
+      scanning.value = current is ScanningState;
+    }));
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Container(
-          height: 150,
-          width: 150,
-          decoration: BoxDecoration(
-            color: Constants.primary,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            Icons.straight,
-            color: Colors.white,
-            size: 80,
-          ),
-        ),
+        const DirectionPointView(),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: SizedBox(
@@ -122,48 +147,78 @@ class MainView extends HookWidget {
           ),
         ),
         Center(
-          child: SizedBox(
-            width: 150,
-            height: 150,
-            child: SizedBox(
-              height: 40.0,
-              child: MaterialButton(
-                color: Constants.primary600,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(75.0), // Change your border radius here
-                  ),
-                ),
-                onPressed: () {
-                  scanning.value = !scanning.value;
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      scanning.value
-                          ? Icons.wifi_tethering
-                          : Icons.wifi_tethering_off,
-                      color: scanning.value
-                          ? Constants.textHighlColor
-                          : Colors.white,
-                      size: scanning.value ? 100 : 60,
-                    ),
-                    // Text(
-                    //   scanning.value ? "Scanning" : "Scan",
-                    //   style: TextStyle(
-                    //       color: scanning.value
-                    //           ? Constants.textHighlColor
-                    //           : Colors.white,
-                    //       fontSize: 20),
-                    // ),
-                  ],
-                ),
+          child: MaterialButton(
+            height: 140,
+            color: Constants.primary600,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(
+                Radius.circular(75.0), // Change your border radius here
               ),
+            ),
+            onPressed: () {
+              cubit.toggleScanning();
+            },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  scanning.value
+                      ? Icons.wifi_tethering
+                      : Icons.wifi_tethering_off,
+                  color:
+                      scanning.value ? Constants.textHighlColor : Colors.white,
+                  size: scanning.value ? 100 : 60,
+                ),
+                // Text(
+                //   scanning.value ? "Scanning" : "Scan",
+                //   style: TextStyle(
+                //       color: scanning.value
+                //           ? Constants.textHighlColor
+                //           : Colors.white,
+                //       fontSize: 20),
+                // ),
+              ],
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class DirectionPointView extends HookWidget {
+  const DirectionPointView({
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = useBloc<MarkCubit>();
+    useBlocBuilder(
+      cubit,
+      buildWhen: (current) => true,
+    );
+    return Container(
+      height: 150,
+      width: 150,
+      decoration: BoxDecoration(
+        color: Constants.primary,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            cubit.state.iconData,
+            color: Colors.white,
+            size: 80,
+          ),
+          Text(
+            cubit.state.desc,
+            style: const TextStyle(color: Colors.white),
+          )
+        ],
+      ),
     );
   }
 }

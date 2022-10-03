@@ -1,35 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooked_bloc/hooked_bloc.dart';
+import 'package:mini_map/bloc/header/header_cubit.dart';
+import 'package:mini_map/bloc/movement/movement_cubit.dart';
 import 'package:mini_map/constants.dart';
 import 'package:mini_map/main.dart';
 import 'package:we_slide/we_slide.dart';
 
 class BottomNavInfo extends HookWidget {
-  BottomNavInfo({super.key});
+  const BottomNavInfo({super.key});
 
   final double panelMin = 70;
   final double panelMax = 500;
-
-  final List<DirectionView> itemList = [
-    const DirectionView(
-        color: Colors.white, actionIcon: Icons.elevator, text: "Elevator"),
-    const DirectionView(
-        color: Colors.white, actionIcon: Icons.straight, text: "Forward 30 M"),
-    const DirectionView(
-        color: Colors.white, actionIcon: Icons.turn_right, text: "Turn Right"),
-    const DirectionView(
-        color: Colors.white, actionIcon: Icons.straight, text: "Forward 10 M"),
-    const DirectionView(
-        color: Constants.textHighlColor,
-        actionIcon: Icons.turn_left,
-        text: "Turn Left"),
-    const DirectionView(
-        color: Colors.white38, actionIcon: Icons.straight, text: "Forward 5 M"),
-    const DirectionView(
-        color: Colors.white38,
-        actionIcon: Icons.directions_transit,
-        text: "Train Exit"),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +23,8 @@ class BottomNavInfo extends HookWidget {
       });
       return null;
     }), const []);
+    final cubit = useBloc<HeaderCubit>();
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: WeSlide(
@@ -51,55 +35,42 @@ class BottomNavInfo extends HookWidget {
         hidePanelHeader: false,
         //bodyWidth: 0,
         body: const MainView(),
-        panel: Padding(
-          padding: EdgeInsets.fromLTRB(0, panelMin, 0, 0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Constants.primary600,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ListView.separated(
-              padding: const EdgeInsets.all(8),
-              itemCount: itemList.length,
-              itemBuilder: (BuildContext context, int index) {
-                return itemList[index];
-              },
-              separatorBuilder: (BuildContext context, int index) =>
-                  const Divider(
-                indent: 6,
-                endIndent: 6,
-                height: 6,
-                thickness: 2,
-              ),
-            ),
-          ),
-        ),
-        panelHeader: NavInfoHeader(
-          isVisable: true,
-          onTap: () {
-            val.value.show();
-          },
-          cancelIcon: IconButton(
-            iconSize: 27,
-            icon: isOpen.value
-                ? const Icon(Icons.arrow_circle_down)
-                : const Icon(Icons.highlight_off),
-            color: Colors.white,
-            onPressed: () {
-              if (isOpen.value) {
-                val.value.hide();
-              } else {
-                _cancel(context);
-                print("Navigation cancelled");
-              }
+        panel: MovementPanel(panelMin: panelMin),
+        panelHeader: HookBuilder(builder: (context) {
+          useBlocBuilder(cubit, buildWhen: ((current) => true));
+
+          return NavInfoHeader(
+            key: UniqueKey(),
+            isVisable: cubit.state is NavigatingState,
+            onTap: () {
+              val.value.show();
             },
-          ),
-        ),
+            cancelIcon: IconButton(
+              iconSize: 40,
+              icon: isOpen.value
+                  ? const Icon(Icons.arrow_circle_down)
+                  : const Icon(Icons.highlight_off),
+              color: Colors.white,
+              onPressed: () {
+                if (isOpen.value) {
+                  val.value.hide();
+                } else {
+                  _cancel(context, result: (value) {
+                    if (value) cubit.cancelNavigation();
+                  });
+                }
+              },
+            ),
+            iconData: cubit.state.iconData,
+            destination: cubit.state.destination,
+            leftMeters: cubit.state.leftMeters,
+          );
+        }),
       ),
     );
   }
 
-  void _cancel(BuildContext context) {
+  void _cancel(BuildContext context, {required Function result}) {
     showDialog(
         context: context,
         builder: (BuildContext ctx) {
@@ -119,7 +90,44 @@ class BottomNavInfo extends HookWidget {
                   child: const Text("No")),
             ],
           );
-        }).then((value) => print(value));
+        }).then((value) => result(value));
+  }
+}
+
+class MovementPanel extends HookWidget {
+  const MovementPanel({
+    Key? key,
+    required this.panelMin,
+  }) : super(key: key);
+
+  final double panelMin;
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = useBloc<MovementCubit>();
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(0, panelMin, 0, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Constants.primary600,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: ListView.separated(
+          padding: const EdgeInsets.all(8),
+          itemCount: cubit.state.movements.length,
+          itemBuilder: (BuildContext context, int index) {
+            return cubit.state.movements[index];
+          },
+          separatorBuilder: (BuildContext context, int index) => const Divider(
+            indent: 6,
+            endIndent: 6,
+            height: 6,
+            thickness: 2,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -169,12 +177,17 @@ class NavInfoHeader extends StatelessWidget {
       {required this.isVisable,
       required this.onTap,
       required this.cancelIcon,
+      required this.iconData,
+      required this.destination,
+      required this.leftMeters,
       super.key});
 
   final bool isVisable;
   final Function onTap;
   final IconButton cancelIcon;
-
+  final IconData iconData;
+  final String destination;
+  final String leftMeters;
   @override
   Widget build(BuildContext context) {
     return Visibility(
@@ -191,25 +204,25 @@ class NavInfoHeader extends StatelessWidget {
           child: Flex(
             direction: Axis.horizontal,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.all(15.0),
                 child: Icon(
-                  Icons.elevator,
+                  iconData,
                   size: 30,
                   color: Constants.textHighlColor,
                 ),
               ),
-              const Text(
-                "Elevator",
-                style: TextStyle(
+              Text(
+                destination,
+                style: const TextStyle(
                     color: Constants.textHighlColor,
                     fontWeight: FontWeight.bold),
               ),
-              const Flexible(
+              Flexible(
                   child: Center(
                       child: Text(
-                "50 M",
-                style: TextStyle(
+                leftMeters,
+                style: const TextStyle(
                     color: Constants.textHighlColor,
                     fontWeight: FontWeight.bold),
               ))),
