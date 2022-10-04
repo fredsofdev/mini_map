@@ -80,6 +80,7 @@ class NavManagerRepository extends NavRepository {
       _dirController.sink.add(Direction.finding);
     } else {
       routeGenerator();
+      _dirController.sink.add(Direction.correct);
     }
   }
 
@@ -100,15 +101,16 @@ class NavManagerRepository extends NavRepository {
     if (route.isEmpty) {
       currentPos = next;
       routeGenerator();
+      _dirController.sink.add(Direction.correct);
       return;
     }
 
     var nextPos = route.where((e) => e.current == next.current);
     var prevPos = route.where((e) => e.current == currentPos.current);
     if (nextPos.isEmpty) {
-      _dirController.sink.add(Direction.incorrect);
       currentPos = next;
       routeGenerator();
+      _dirController.sink.add(Direction.incorrect);
       return;
     }
 
@@ -119,9 +121,9 @@ class NavManagerRepository extends NavRepository {
 
     print("Next ${nextPos.first}");
     bool passed = false;
-    for (int index in Iterable.generate(navPath.length - 1)) {
+    for (int index in Iterable.generate(navPath.length)) {
       if (navPath[index].padList.contains(nextPos.first)) {
-        print("contains in index $index");
+        print("##################contains in index $index");
         passed = true;
         var move = navPath[index].update(state: MoveState.current);
         var length = move.padList.length - move.padList.indexOf(nextPos.first);
@@ -162,12 +164,8 @@ class NavManagerRepository extends NavRepository {
     List<Pad> neighbors = _getNeighbors();
     route = _reconstructPath(neighbors);
     navPath = _mapRouteToMovement();
-    // navPath.forEach((element) {
-    //   print(element);
-    //   print("");
-    // });
+
     _controller.sink.add(navPath);
-    _dirController.sink.add(Direction.correct);
   }
 
   List<Pad> _getNeighbors() {
